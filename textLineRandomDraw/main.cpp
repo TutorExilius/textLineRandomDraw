@@ -12,11 +12,13 @@
 
 // Forward-Declarations
 void printInfoParamData( std::initializer_list<std::string> params );
-void drawLines( const std::vector<std::string> &textLinesList, const int &cntDraws );
+void drawLines( std::vector<std::string> textLinesList, 
+				const int &cntDraws, 
+				const bool reShuffle = false );
 
 int main( int argc, char **argv )
 {
-	if( argc >= 2 && argc <= 3 )
+	if( argc >= 2 && argc <= 4 )
 	{
 		std::string filePath = argv[1];
 
@@ -36,7 +38,7 @@ int main( int argc, char **argv )
 
 		while( getline( in, textLine ) )
 		{
-			if( textLine.size() > minStringLength )
+			if( textLine.size() >= minStringLength )
 			{
 				textLineList.push_back( textLine );
 			}
@@ -63,7 +65,7 @@ int main( int argc, char **argv )
 
 			try
 			{
-				if( argc == 3 )
+				if( argc >= 3 )
 				{
 					cntDrawStr = argv[2];
 					cntDraw = std::stoi( cntDrawStr );
@@ -118,7 +120,27 @@ int main( int argc, char **argv )
 
 			if( !isCntDrawGreater )
 			{
-				drawLines( textLineList, cntDraw );
+				bool modeReShuffle = false;
+
+				if( argc == 4 )
+				{
+					try
+					{
+						int iModeReShuffle = ::atoi( argv[3] );
+
+						if( iModeReShuffle == 1 )
+						{
+							modeReShuffle = true;
+							std::cout << "Mode re-shuffle after every draw activated!" << std::endl;
+						}
+					}
+					catch( ... )
+					{
+						// do nothing. ignore modeReDraw if error occured
+					}
+				}
+
+				drawLines( textLineList, cntDraw, modeReShuffle );
 			}
 			else
 			{
@@ -149,36 +171,59 @@ int main( int argc, char **argv )
 // not used yet
 void printInfoParamData( std::initializer_list<std::string> params )
 {
-	std::cout << "Application: arameters:" << *( params.begin() ) << std::endl;
+	std::cout << "Application: arameters:" << *(params.begin()) << std::endl;
 
 	std::cout << "Parameters:" << std::endl;
-	std::cout << "\tFile: " << *( params.begin() + 1) << std::endl;
-	std::cout << "\tNumber of draws: " << *( params.begin() + 2 ) << std::endl;
+	std::cout << "\tFile: " << *(params.begin() + 1) << std::endl;
+	std::cout << "\tNumber of draws: " << *(params.begin() + 2) << std::endl;
 }
 
-void drawLines( const std::vector<std::string> &textLinesList, const int &cntDraws )
+void drawLines( std::vector<std::string> textLinesList, const int &cntDraws, const bool reShuffleMode )
 {
+	if( textLinesList.size() == 0 )
+		return;
+
+	int cntDraws_ = cntDraws;
+
+	if( cntDraws < 0 || cntDraws > textLinesList.size() )
+	{
+		cntDraws_ = 1;
+	}
+
 	std::vector<std::string> raffledList;
 
-	int raffledCnt = 0;
-
-	while( raffledCnt < cntDraws )
+	if( reShuffleMode )
 	{
-		std::string raffledTextLine = textLinesList.at( raffledCnt );
+		int raffledCnt = 0;
 
-		if( std::find( raffledList.begin(), raffledList.end(), raffledTextLine ) == raffledList.end() )
+		while( raffledCnt < cntDraws_ )
 		{
-			raffledList.push_back( raffledTextLine );
-			++raffledCnt;
-		}
+			// take first line in the list
+			std::string raffledTextLine = textLinesList.at( 0 );
 
-		// shuffle raffledList after every draw
-		std::random_device rd;
-		std::random_shuffle( raffledList.begin(), raffledList.end(),
-			[&]( const int &max ){
+			// is first line already drawed?
+			if( std::find( raffledList.begin(), raffledList.end(), raffledTextLine) == raffledList.end() )
+			{
+				raffledList.push_back( raffledTextLine );
+				++raffledCnt;
+			}
+
+			// shuffle raffledList after every draw.
+			// shuffle needed to get a other line at first position into textLinesList
+			std::random_device rd;
+			std::random_shuffle( textLinesList.begin(), textLinesList.end(),
+				[&](const int &max) {
 				std::uniform_int_distribution<int> dist{ 1, max };
-				return dist( rd ) - 1;
+				return dist(rd) - 1;
 			} );
+		}
+	}
+	else
+	{
+		for( int i = 0; i < cntDraws_; i++ )
+		{
+			raffledList.push_back( textLinesList.at(i) );
+		}
 	}
 
 	// --- print raffled list
