@@ -4,6 +4,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <ctime>
 
 // ****
 // Author:	Tutor Exilius	(http://exilius.de)
@@ -50,12 +51,7 @@ int main( int argc, char **argv )
 		if( cntTextLines > 0 )
 		{
 			// shuffle textLines
-			std::random_device rd;
-			std::random_shuffle( textLineList.begin(), textLineList.end(),
-				[&]( const int &max ){
-					std::uniform_int_distribution<int> dist{ 1, max };
-					return dist( rd ) - 1;
-				} );
+			std::shuffle( textLineList.begin(), textLineList.end(), std::default_random_engine(static_cast<unsigned int>(time(nullptr)) ) );
 
 			std::string cntDrawStr;
 
@@ -144,12 +140,12 @@ int main( int argc, char **argv )
 			}
 			else
 			{
-				if( printGreaterCntDrawAnyway == 'y' || printGreaterCntDrawAnyway == 'Y' )
+				if (printGreaterCntDrawAnyway == 'y' || printGreaterCntDrawAnyway == 'Y')
 				{
-					std::for_each( textLineList.begin(), textLineList.end(),
-						[]( const auto &line ){
-							std::cout << line << std::endl;
-						} );
+					for (const auto &textLine : textLineList)
+					{
+						std::cout << textLine << std::endl;
+					}
 				}
 			}
 		}
@@ -210,12 +206,7 @@ void drawLines( std::vector<std::string> textLinesList, const int &cntDraws, con
 
 			// shuffle raffledList after every draw.
 			// shuffle needed to get a other line at first position into textLinesList
-			std::random_device rd;
-			std::random_shuffle( textLinesList.begin(), textLinesList.end(),
-				[&](const int &max) {
-				std::uniform_int_distribution<int> dist{ 1, max };
-				return dist(rd) - 1;
-			} );
+			std::shuffle( textLinesList.begin(), textLinesList.end(), std::default_random_engine(static_cast<unsigned int>(time(nullptr))));
 		}
 	}
 	else
